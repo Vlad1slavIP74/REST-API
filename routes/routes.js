@@ -40,7 +40,7 @@ const router = app => {
       response.send(JSON.stringify(result[0]));
     });
   });
-  
+
 
   app.post('/theme', (request, response) => {
 
@@ -50,15 +50,23 @@ const router = app => {
       response.status(400).send(err);
     } else {
       const name = request.body.name;
-
-      pool.query('INSERT INTO theme (name) VALUES (?)', name.toString(), (error, result) => {
+     const strName = name.toString();
+// INSERT INTO `theme` (name) SELECT * FROM (SELECT 'asd') AS tmp WHERE NOT EXISTS (SELECT (name) FROM `theme` WHERE (name) = asd) LIMIT 1
+      pool.query('INSERT INTO `theme` (name) SELECT * FROM (SELECT ?) AS tmp WHERE NOT EXISTS (SELECT (name) FROM `theme` WHERE (name) = ?) LIMIT 1', [strName,strName],
+                    (error, result) => {
         if (error) throw error;
 
         const ok = {
           error: null,
           themeid: result.insertId
         };
-        response.status(201).send(JSON.stringify(ok));
+        if (result.insertId != 0) {
+          response.status(201).send(JSON.stringify(ok, "" , 4));
+        }
+        else {
+          response.send(JSON.stringify("There is a same theme"))
+        }
+
       });
     }
   });
